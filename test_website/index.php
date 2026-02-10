@@ -1,0 +1,4 @@
+<?php
+
+header("Set-Cookie: ciao=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.O39wphnad2iRtKulTeEmBdPLz1s22_XihMtD7swLx_o;")
+?>

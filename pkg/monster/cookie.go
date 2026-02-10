@@ -48,6 +48,22 @@ func (c *Cookie) Decode() (success bool) {
 		success = true
 	}
 
+	if cookiesignatureDecode(c) {
+		success = true
+	}
+
+	if gorillaDecode(c) {
+		success = true
+	}
+
+	if symfonyDecode(c) {
+		success = true
+	}
+
+	if springDecode(c) {
+		success = true
+	}
+
 	if !success && c.unwrap() {
 		return c.Decode()
 	}
@@ -66,10 +82,12 @@ func (c *Cookie) Unsign(wl *Wordlist, concurrencyLimit uint64) (key []byte, succ
 	shouldUseLaravel := c.hasParsedDataFor(laravelDecoder)
 	shouldUseItsDangerous := c.hasParsedDataFor(itsdangerousDecoder)
 	shouldUseCodeigniter := c.hasParsedDataFor(codeigniterDecoder)
+	shouldUseCookiesignature := c.hasParsedDataFor(cookiesignatureDecoder)
+	shouldUseGorilla := c.hasParsedDataFor(gorillaDecoder)
+	shouldUseSymfony := c.hasParsedDataFor(symfonyDecoder)
+	shouldUseSpring := c.hasParsedDataFor(springDecoder)
 
-	// This looks a bit silly right now, but as we add more decoders, this
-	// should be here to ensure we don't do pointless work.
-	if !shouldUseDjango && !shouldUseFlask && !shouldUseJwt && !shouldUseRack && !shouldUseExpress && !shouldUseLaravel && !shouldUseItsDangerous && !shouldUseCodeigniter {
+	if !shouldUseDjango && !shouldUseFlask && !shouldUseJwt && !shouldUseRack && !shouldUseExpress && !shouldUseLaravel && !shouldUseItsDangerous && !shouldUseCodeigniter && !shouldUseCookiesignature && !shouldUseGorilla && !shouldUseSymfony && !shouldUseSpring {
 		return nil, false
 	}
 
@@ -117,6 +135,22 @@ func (c *Cookie) Unsign(wl *Wordlist, concurrencyLimit uint64) (key []byte, succ
 
 			if shouldUseCodeigniter && codeigniterUnsign(c, entry) {
 				c.wasUnsignedBy(codeigniterDecoder, entry)
+			}
+
+			if shouldUseCookiesignature && cookiesignatureUnsign(c, entry) {
+				c.wasUnsignedBy(cookiesignatureDecoder, entry)
+			}
+
+			if shouldUseGorilla && gorillaUnsign(c, entry) {
+				c.wasUnsignedBy(gorillaDecoder, entry)
+			}
+
+			if shouldUseSymfony && symfonyUnsign(c, entry) {
+				c.wasUnsignedBy(symfonyDecoder, entry)
+			}
+
+			if shouldUseSpring && springUnsign(c, entry) {
+				c.wasUnsignedBy(springDecoder, entry)
 			}
 		}(entry)
 	}
@@ -182,6 +216,22 @@ func (c *Cookie) String() (out string) {
 		out += "Decoder codeigniter reports:\n" + val.(*codeigniterParsedData).String() + "\n"
 	}
 
+	if val, ok := c.decodedBy[cookiesignatureDecoder]; ok {
+		out += "Decoder cookiesignature reports:\n" + val.(*cookiesignatureParsedData).String() + "\n"
+	}
+
+	if val, ok := c.decodedBy[gorillaDecoder]; ok {
+		out += "Decoder gorilla reports:\n" + val.(*gorillaParsedData).String() + "\n"
+	}
+
+	if val, ok := c.decodedBy[symfonyDecoder]; ok {
+		out += "Decoder symfony reports:\n" + val.(*symfonyParsedData).String() + "\n"
+	}
+
+	if val, ok := c.decodedBy[springDecoder]; ok {
+		out += "Decoder spring reports:\n" + val.(*springParsedData).String() + "\n"
+	}
+
 	return out
 }
 
@@ -195,6 +245,17 @@ func (c *Cookie) Result() (success bool, key []byte, decoder string) {
 	}
 
 	return true, c.unsignedKey, c.unsignedBy
+}
+
+// DecodedDecoders returns the names of all decoders that successfully decoded this cookie.
+func (c *Cookie) DecodedDecoders() []string {
+	c.mutex.RLock()
+	defer c.mutex.RUnlock()
+	names := make([]string, 0, len(c.decodedBy))
+	for name := range c.decodedBy {
+		names = append(names, name)
+	}
+	return names
 }
 
 func (c *Cookie) wasDecodedBy(decoder string, data interface{}) {

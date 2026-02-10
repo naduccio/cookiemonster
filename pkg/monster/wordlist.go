@@ -11,6 +11,9 @@ import (
 //go:embed wordlists/flask-unsign.txt
 var defaultWordlist string
 
+//go:embed wordlists/default-keys-extra.txt
+var extraDefaultKeys string
+
 func NewWordlist() *Wordlist {
 	return &Wordlist{entries: [][]byte{}}
 }
@@ -49,9 +52,12 @@ func (w *Wordlist) Load(path string) error {
 	return nil
 }
 
-// Load default wordlist entries
+// Load default wordlist entries (main list + extra default keys for other technologies).
 func (w *Wordlist) LoadDefault() error {
-	return w.LoadFromString(defaultWordlist)
+	if err := w.LoadFromString(defaultWordlist); err != nil {
+		return err
+	}
+	return w.LoadFromString(extraDefaultKeys)
 }
 
 // Load wordlist entries from the provided `path`.

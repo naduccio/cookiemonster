@@ -22,20 +22,21 @@ var (
 )
 
 func main() {
-	sayHello()
 	flag.Parse()
 
-	// We need both of these.
-	if (*cookieFlag == "" && *urlFlag == "") || (*cookieFlag != "" && *urlFlag != "") || *wordlistFlag == "" {
+	// We need exactly one of: cookie, or URL(s) from -url, args, or stdin.
+	if *wordlistFlag == "" {
+		flag.Usage()
+		os.Exit(1)
+	}
+	if *cookieFlag != "" && *urlFlag != "" {
 		flag.Usage()
 		os.Exit(1)
 	}
 
 	if *cookieFlag != "" {
 		handleCookie()
-	}
-
-	if *urlFlag != "" {
+	} else {
 		handleURL()
 	}
 }
